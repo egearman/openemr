@@ -1,0 +1,28 @@
+{
+  "name": "x12-auto-process/oe-module-x12-auto",
+  "description": "OpenEMR Custom Module X12 Auto Process",
+  "type": "openemr-module",
+  "license": "GPL-3.0",
+  "authors": [
+    {
+      "name": "Eric Gearman",
+      "email": "egearman@ibss.net",
+      "role": "Developer"
+    }
+  ],
+  "keywords": ["openemr", "openemr-module","x12","download","process"],
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {"OpenEMR\\Modules\\X12AutoProcess\\": "src/"}
+  },
+  "require": {
+    "openemr/oe-module-installer-plugin": "^0.1.0",
+    "php": ">=7.1",
+    "symfony/event-dispatcher": "^4.4.0",
+    "nyholm/psr7": "^1.4"
+  },
+  "conflict": {
+    "openemr/openemr": "<6.0.0"
+  }
+}
+
