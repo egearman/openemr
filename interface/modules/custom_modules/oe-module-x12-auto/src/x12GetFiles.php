@@ -10,7 +10,11 @@ namespace OpenEMR\Modules\X12AutoProcess;
 $_SESSION['site_id'] = 'default';
 $ignoreAuth = true;
 $_SERVER['HTTP_HOST'] = 'localhost';
+
 require_once(__DIR__ . '/../../../../globals.php');
+
+use phpseclib3\Net\SFTP;
+use OpenEMR\Common\Crypto\CryptoGen;
 
 class x12GetFiles {
     public function __construct() {
@@ -29,18 +33,34 @@ class x12GetFiles {
     }
 
     public function getFilesFromPartner($row) {
-        // we have partner information here
-        //set up connection, download files and close connection
+        $host = $row['x12_sftp_host'];
+        $port = $row['x12_sftp_port'] ? $row['x12_sftp_port'] : 22;
+        $user = $row['x12_sftp_login'];
+        $password_enc = $row['x12_sftp_pass'];
+        $remote_dir = $row['x12_sftp_remote_dir'];
+        $cryptoGen = new CryptoGen();
+        $password = $cryptoGen->decryptStandard($password_enc);
+
+        $sftp = new SFTP($host, $port);
+        if (!$sftp->login($user, $password)) {
+            die("unable to connect to remote sftp server");
+        }
+        $files = $sftp->nlist($remote_dir, false); // we don't want to recurse here
+        foreach ($files as $file) {
+            if ($file == '.' || $file == '..') continue;
+            $fp = rtrim($remote_dir, "/") . "/" . $file;
+            if($sftp->is_dir($fp)) continue;
+            print($file . "\n");
+        }
     }
 
     public function downloadFiles($exclude_test = true) {
-        $sql = "select id from x12_partners ";
+        $sql = "select * from x12_partners ";
         if ($exclude_test) {
             $sql = $sql . "where x12_isa15 != 'T'";
         }
         $res = sqlStatement($sql);
         $x = sqlNumRows($res);
-        print(strval($x) . "\n\n");
         while ($x > 0) {
             $r = $res->FetchRow();
             $this->getFilesFromPartner($r);
